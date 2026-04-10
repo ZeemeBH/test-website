@@ -1,0 +1,380 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Boxout — Ship Smarter</title>
+  <link rel="stylesheet" href="styles.css" />
+</head>
+<body>
+
+  <!-- NAV -->
+  <header class="nav" id="nav">
+    <div class="nav__inner container">
+      <a class="nav__logo" href="#">
+        <span class="logo-icon">&#9632;</span> Boxout
+      </a>
+      <nav class="nav__links" id="navLinks">
+        <a href="#features">Features</a>
+        <a href="#how-it-works">How it works</a>
+        <a href="#pricing">Pricing</a>
+        <a href="#contact">Contact</a>
+      </nav>
+      <a class="btn btn--primary nav__cta" href="#pricing">Get a quote</a>
+      <button class="nav__burger" id="burger" aria-label="Toggle menu">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </header>
+
+  <!-- HERO -->
+  <section class="hero">
+    <div class="container hero__inner">
+      <div class="hero__text">
+        <p class="hero__eyebrow">Worldwide shipping, simplified</p>
+        <h1 class="hero__heading">Ship anything,<br /><span class="accent">anywhere.</span></h1>
+        <p class="hero__sub">Boxout connects businesses to a global carrier network — fast pickups, real-time tracking, and rates that won't break your budget.</p>
+        <div class="hero__actions">
+          <a class="btn btn--primary btn--lg" href="#pricing">Start shipping today</a>
+          <a class="btn btn--ghost btn--lg" href="#how-it-works">See how it works</a>
+        </div>
+        <div class="hero__stats">
+          <div class="stat"><span class="stat__num" data-target="180">0</span><span class="stat__unit">+</span><span class="stat__label">Countries</span></div>
+          <div class="stat"><span class="stat__num" data-target="2400">0</span><span class="stat__unit">+</span><span class="stat__label">Carriers</span></div>
+          <div class="stat"><span class="stat__num" data-target="98">0</span><span class="stat__unit">%</span><span class="stat__label">On-time rate</span></div>
+        </div>
+      </div>
+      <div class="hero__visual" aria-hidden="true">
+        <div class="hero__box box-1"></div>
+        <div class="hero__box box-2"></div>
+        <div class="hero__box box-3"></div>
+        <div class="hero__globe">
+          <div class="globe__ring ring-1"></div>
+          <div class="globe__ring ring-2"></div>
+          <div class="globe__dot dot-1"></div>
+          <div class="globe__dot dot-2"></div>
+          <div class="globe__dot dot-3"></div>
+          <div class="globe__line line-1"></div>
+          <div class="globe__line line-2"></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- LOGO STRIP -->
+  <div class="logo-strip">
+    <div class="logo-strip__inner">
+      <span>Trusted by teams at</span>
+      <div class="logo-strip__logos">
+        <span class="partner-logo">Meridian Co.</span>
+        <span class="partner-logo">NovaTrade</span>
+        <span class="partner-logo">PeakRetail</span>
+        <span class="partner-logo">SkyLabs</span>
+        <span class="partner-logo">Crestline</span>
+        <span class="partner-logo">Harborgate</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- FEATURES -->
+  <section class="features section" id="features">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-eyebrow">Why Boxout</p>
+        <h2 class="section-title">Everything you need to ship at scale</h2>
+      </div>
+      <div class="features__grid">
+        <div class="feature-card" data-animate>
+          <div class="feature-card__icon">&#9650;</div>
+          <h3>Instant rate comparison</h3>
+          <p>Compare live rates across 2,400+ carriers in seconds and pick the best option for every shipment.</p>
+        </div>
+        <div class="feature-card" data-animate>
+          <div class="feature-card__icon">&#128204;</div>
+          <h3>Real-time tracking</h3>
+          <p>One tracking page for every carrier. Share a live link with your customers automatically.</p>
+        </div>
+        <div class="feature-card" data-animate>
+          <div class="feature-card__icon">&#128274;</div>
+          <h3>Automated customs</h3>
+          <p>Boxout generates compliant customs documents for 180+ countries so your packages clear borders without delays.</p>
+        </div>
+        <div class="feature-card" data-animate>
+          <div class="feature-card__icon">&#9889;</div>
+          <h3>Same-day pickup</h3>
+          <p>Schedule a pickup before noon and your packages are on the road the same day — no drop-off required.</p>
+        </div>
+        <div class="feature-card" data-animate>
+          <div class="feature-card__icon">&#128200;</div>
+          <h3>Shipping analytics</h3>
+          <p>Dashboards that surface your cost-per-shipment, delivery performance, and carrier SLA compliance in one view.</p>
+        </div>
+        <div class="feature-card" data-animate>
+          <div class="feature-card__icon">&#128279;</div>
+          <h3>Plug-and-play integrations</h3>
+          <p>Connect Shopify, WooCommerce, Amazon, or any platform via our REST API in under 10 minutes.</p>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- HOW IT WORKS -->
+  <section class="how section" id="how-it-works">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-eyebrow">The process</p>
+        <h2 class="section-title">From order to doorstep in 4 steps</h2>
+      </div>
+      <div class="steps">
+        <div class="step" data-animate>
+          <div class="step__num">01</div>
+          <div class="step__body">
+            <h3>Connect your store</h3>
+            <p>Link your e-commerce platform or import orders via CSV. Orders sync automatically.</p>
+          </div>
+        </div>
+        <div class="step__connector" aria-hidden="true"></div>
+        <div class="step" data-animate>
+          <div class="step__num">02</div>
+          <div class="step__body">
+            <h3>Compare & book</h3>
+            <p>Pick the best carrier rate for each shipment — cheapest, fastest, or a custom rule you define.</p>
+          </div>
+        </div>
+        <div class="step__connector" aria-hidden="true"></div>
+        <div class="step" data-animate>
+          <div class="step__num">03</div>
+          <div class="step__body">
+            <h3>Print labels in bulk</h3>
+            <p>Generate and print hundreds of labels at once. Boxout batches them into a single PDF.</p>
+          </div>
+        </div>
+        <div class="step__connector" aria-hidden="true"></div>
+        <div class="step" data-animate>
+          <div class="step__num">04</div>
+          <div class="step__body">
+            <h3>Track & delight</h3>
+            <p>Customers get a branded tracking page. You get peace of mind with proactive delay alerts.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- PRICING -->
+  <section class="pricing section" id="pricing">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-eyebrow">Pricing</p>
+        <h2 class="section-title">Simple, transparent plans</h2>
+      </div>
+      <div class="pricing__toggle">
+        <span id="toggle-monthly" class="toggle-label active">Monthly</span>
+        <button class="toggle-switch" id="billingToggle" aria-label="Toggle billing period" role="switch" aria-checked="false">
+          <span class="toggle-switch__thumb"></span>
+        </button>
+        <span id="toggle-annual" class="toggle-label">Annual <span class="badge">Save 20%</span></span>
+      </div>
+      <div class="pricing__cards">
+        <div class="pricing-card" data-animate>
+          <div class="pricing-card__label">Starter</div>
+          <div class="pricing-card__price">
+            <span class="price" data-monthly="49" data-annual="39">$49</span>
+            <span class="price-period">/mo</span>
+          </div>
+          <p class="pricing-card__desc">Perfect for small shops shipping up to 200 packages a month.</p>
+          <ul class="pricing-card__features">
+            <li>&#10003; Up to 200 shipments/mo</li>
+            <li>&#10003; 500+ carriers</li>
+            <li>&#10003; Branded tracking page</li>
+            <li>&#10003; Email support</li>
+            <li class="disabled">&#10005; Customs automation</li>
+            <li class="disabled">&#10005; API access</li>
+          </ul>
+          <a class="btn btn--outline btn--full" href="#">Get started</a>
+        </div>
+        <div class="pricing-card pricing-card--featured" data-animate>
+          <div class="pricing-card__badge">Most popular</div>
+          <div class="pricing-card__label">Growth</div>
+          <div class="pricing-card__price">
+            <span class="price" data-monthly="149" data-annual="119">$149</span>
+            <span class="price-period">/mo</span>
+          </div>
+          <p class="pricing-card__desc">For growing businesses that need automation and global reach.</p>
+          <ul class="pricing-card__features">
+            <li>&#10003; Up to 2,000 shipments/mo</li>
+            <li>&#10003; 2,400+ carriers</li>
+            <li>&#10003; Branded tracking page</li>
+            <li>&#10003; Priority support</li>
+            <li>&#10003; Customs automation</li>
+            <li>&#10003; API access</li>
+          </ul>
+          <a class="btn btn--primary btn--full" href="#">Get started</a>
+        </div>
+        <div class="pricing-card" data-animate>
+          <div class="pricing-card__label">Enterprise</div>
+          <div class="pricing-card__price">
+            <span class="price">Custom</span>
+          </div>
+          <p class="pricing-card__desc">Dedicated support, volume discounts, and SLA guarantees for high-volume shippers.</p>
+          <ul class="pricing-card__features">
+            <li>&#10003; Unlimited shipments</li>
+            <li>&#10003; All carriers</li>
+            <li>&#10003; White-label tracking</li>
+            <li>&#10003; Dedicated account manager</li>
+            <li>&#10003; Customs automation</li>
+            <li>&#10003; Full API + webhooks</li>
+          </ul>
+          <a class="btn btn--outline btn--full" href="#contact">Talk to sales</a>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- TESTIMONIALS -->
+  <section class="testimonials section">
+    <div class="container">
+      <div class="section-header">
+        <p class="section-eyebrow">What customers say</p>
+        <h2 class="section-title">Shippers love Boxout</h2>
+      </div>
+      <div class="testimonials__slider" id="testimonialSlider">
+        <div class="testimonials__track" id="testimonialTrack">
+          <div class="testimonial-card">
+            <p class="testimonial-card__quote">"We cut our shipping costs by 34% in the first month. The rate comparison alone pays for itself — switching to Boxout was a no-brainer."</p>
+            <div class="testimonial-card__author">
+              <div class="author-avatar">JM</div>
+              <div>
+                <strong>Jamie Marsh</strong>
+                <span>Head of Ops, PeakRetail</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <p class="testimonial-card__quote">"The customs automation is incredible. We ship to 40 countries and Boxout handles every document automatically. Zero border holds since we switched."</p>
+            <div class="testimonial-card__author">
+              <div class="author-avatar">SC</div>
+              <div>
+                <strong>Sofia Chen</strong>
+                <span>Logistics Director, NovaTrade</span>
+              </div>
+            </div>
+          </div>
+          <div class="testimonial-card">
+            <p class="testimonial-card__quote">"Our support tickets about shipping dropped 60% because customers can track their own packages. Boxout's branded tracking page is a genuine game changer."</p>
+            <div class="testimonial-card__author">
+              <div class="author-avatar">RK</div>
+              <div>
+                <strong>Rohan Kapoor</strong>
+                <span>CEO, SkyLabs</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="testimonials__dots" id="testimonialDots">
+        <button class="dot active" data-index="0" aria-label="Testimonial 1"></button>
+        <button class="dot" data-index="1" aria-label="Testimonial 2"></button>
+        <button class="dot" data-index="2" aria-label="Testimonial 3"></button>
+      </div>
+    </div>
+  </section>
+
+  <!-- CTA BANNER -->
+  <section class="cta-banner">
+    <div class="container cta-banner__inner">
+      <h2>Ready to ship smarter?</h2>
+      <p>Join 12,000+ businesses already saving time and money with Boxout.</p>
+      <a class="btn btn--primary btn--lg" href="#pricing">Start for free — no credit card required</a>
+    </div>
+  </section>
+
+  <!-- CONTACT -->
+  <section class="contact section" id="contact">
+    <div class="container contact__inner">
+      <div class="contact__text">
+        <p class="section-eyebrow">Get in touch</p>
+        <h2 class="section-title">Have questions? We're here.</h2>
+        <p>Our shipping experts are available Monday–Friday, 8am–8pm EST. Typically respond in under 2 hours.</p>
+        <div class="contact__channels">
+          <div class="contact__channel">
+            <span class="contact__icon">&#128140;</span>
+            <span>hello@boxout.io</span>
+          </div>
+          <div class="contact__channel">
+            <span class="contact__icon">&#128222;</span>
+            <span>+1 (800) 269-6887</span>
+          </div>
+        </div>
+      </div>
+      <form class="contact__form" id="contactForm" novalidate>
+        <div class="form-row">
+          <div class="form-group">
+            <label for="name">Name</label>
+            <input type="text" id="name" name="name" placeholder="Your name" required />
+          </div>
+          <div class="form-group">
+            <label for="email">Email</label>
+            <input type="email" id="email" name="email" placeholder="you@company.com" required />
+          </div>
+        </div>
+        <div class="form-group">
+          <label for="company">Company</label>
+          <input type="text" id="company" name="company" placeholder="Company name" />
+        </div>
+        <div class="form-group">
+          <label for="message">Message</label>
+          <textarea id="message" name="message" rows="4" placeholder="Tell us about your shipping needs" required></textarea>
+        </div>
+        <button type="submit" class="btn btn--primary btn--full">Send message</button>
+        <p class="form__feedback" id="formFeedback" aria-live="polite"></p>
+      </form>
+    </div>
+  </section>
+
+  <!-- FOOTER -->
+  <footer class="footer">
+    <div class="container footer__inner">
+      <div class="footer__brand">
+        <a class="nav__logo" href="#">
+          <span class="logo-icon">&#9632;</span> Boxout
+        </a>
+        <p>Ship smarter. Deliver faster.<br />Grow without limits.</p>
+      </div>
+      <div class="footer__links">
+        <div class="footer__col">
+          <strong>Product</strong>
+          <a href="#features">Features</a>
+          <a href="#pricing">Pricing</a>
+          <a href="#">Integrations</a>
+          <a href="#">API docs</a>
+        </div>
+        <div class="footer__col">
+          <strong>Company</strong>
+          <a href="#">About</a>
+          <a href="#">Careers</a>
+          <a href="#">Blog</a>
+          <a href="#">Press</a>
+        </div>
+        <div class="footer__col">
+          <strong>Legal</strong>
+          <a href="#">Privacy</a>
+          <a href="#">Terms</a>
+          <a href="#">Security</a>
+          <a href="#">Cookies</a>
+        </div>
+      </div>
+    </div>
+    <div class="footer__bottom container">
+      <p>&copy; 2026 Boxout Inc. All rights reserved.</p>
+      <div class="footer__social">
+        <a href="#" aria-label="Twitter">&#120143;</a>
+        <a href="#" aria-label="LinkedIn">in</a>
+        <a href="#" aria-label="GitHub">&#9670;</a>
+      </div>
+    </div>
+  </footer>
+
+  <script src="script.js"></script>
+</body>
+</html>
