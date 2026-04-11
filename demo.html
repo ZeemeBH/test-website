@@ -1,0 +1,560 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Pickup & Drop-off — Live Dispatch Dashboard</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+  /* ── Reset & base ── */
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+         background: #f1f5f9; color: #1e293b; height: 100vh; overflow: hidden; display: flex; flex-direction: column; }
+
+  /* ── Top bar ── */
+  .topbar { height: 52px; background: #0f172a; display: flex; align-items: center;
+            padding: 0 20px; gap: 20px; flex-shrink: 0; box-shadow: 0 1px 0 rgba(255,255,255,.07); }
+  .topbar-logo { font-size: 16px; font-weight: 800; color: #fff; letter-spacing: -.3px; display: flex; align-items: center; gap: 8px; }
+  .topbar-logo span { width: 28px; height: 28px; background: linear-gradient(135deg,#6366f1,#2563eb);
+                       border-radius: 8px; display: grid; place-items: center; font-size: 14px; }
+  .topbar-badge { font-size: 11px; background: #22c55e22; color: #4ade80; border: 1px solid #4ade8033;
+                  padding: 2px 8px; border-radius: 20px; font-weight: 600; display: flex; align-items: center; gap: 5px; }
+  .pulse { width: 6px; height: 6px; background: #4ade80; border-radius: 50%; animation: pulse 1.4s ease infinite; }
+  @keyframes pulse { 0%,100%{opacity:1;transform:scale(1)} 50%{opacity:.5;transform:scale(1.4)} }
+  .topbar-stats { margin-left: auto; display: flex; gap: 20px; }
+  .topbar-stat { text-align: right; }
+  .topbar-stat-val { font-size: 15px; font-weight: 700; color: #fff; }
+  .topbar-stat-lbl { font-size: 10px; color: #64748b; text-transform: uppercase; letter-spacing: .5px; }
+  .tab-row { display: flex; gap: 4px; }
+  .tab { padding: 4px 14px; border-radius: 6px; font-size: 12px; font-weight: 600; cursor: pointer;
+         color: #94a3b8; border: none; background: transparent; }
+  .tab.active { background: #1e293b; color: #fff; }
+
+  /* ── Main layout ── */
+  .main { flex: 1; display: flex; min-height: 0; }
+
+  /* ── Map panel ── */
+  .map-panel { flex: 1; position: relative; }
+  #map { width: 100%; height: 100%; }
+  .map-overlay { position: absolute; top: 12px; left: 50%; transform: translateX(-50%);
+                 z-index: 1000; background: #fff; border-radius: 999px; padding: 6px 16px;
+                 font-size: 12px; font-weight: 600; color: #334155; box-shadow: 0 2px 12px rgba(0,0,0,.12);
+                 display: flex; align-items: center; gap: 10px; white-space: nowrap; }
+  .map-legend { position: absolute; bottom: 24px; left: 16px; z-index: 1000; background: #fff;
+                border-radius: 10px; padding: 10px 14px; box-shadow: 0 2px 12px rgba(0,0,0,.1);
+                font-size: 11px; color: #475569; display: flex; flex-direction: column; gap: 6px; }
+  .legend-row { display: flex; align-items: center; gap: 8px; }
+  .legend-dot { width: 12px; height: 12px; border-radius: 50%; flex-shrink: 0; }
+
+  /* ── Right panel ── */
+  .right-panel { width: 420px; display: flex; flex-direction: column; border-left: 1px solid #e2e8f0;
+                 background: #f8fafc; flex-shrink: 0; }
+
+  /* ── Driver info card ── */
+  .driver-info { margin: 12px; background: #fff; border-radius: 14px; border: 1px solid #e2e8f0;
+                 padding: 14px; display: none; }
+  .driver-info.visible { display: block; }
+  .driver-info-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 10px; }
+  .driver-info-name { font-size: 14px; font-weight: 700; color: #0f172a; }
+  .driver-info-id { font-size: 10px; color: #94a3b8; font-family: monospace; margin-top: 2px; }
+  .driver-info-close { background: none; border: none; cursor: pointer; font-size: 18px; color: #94a3b8; line-height: 1; }
+  .driver-meta { display: flex; gap: 10px; }
+  .driver-meta-item { flex: 1; background: #f8fafc; border-radius: 8px; padding: 8px;
+                       text-align: center; border: 1px solid #e2e8f0; }
+  .driver-meta-val { font-size: 14px; font-weight: 700; color: #0f172a; }
+  .driver-meta-lbl { font-size: 10px; color: #94a3b8; margin-top: 1px; }
+
+  /* ── Kanban ── */
+  .kanban { flex: 1; padding: 0 12px 12px; display: flex; flex-direction: column; min-height: 0; }
+  .kanban-title { font-size: 11px; font-weight: 700; color: #64748b; text-transform: uppercase;
+                  letter-spacing: .5px; margin: 10px 0 8px; }
+  .kanban-cols { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; flex: 1; min-height: 0; }
+  .kanban-col { display: flex; flex-direction: column; gap: 6px; min-height: 0; }
+  .col-header { padding: 6px 10px; border-radius: 8px; font-size: 11px; font-weight: 700;
+                display: flex; justify-content: space-between; align-items: center; flex-shrink: 0; }
+  .col-header.pending   { background: #fef9c3; color: #854d0e; }
+  .col-header.finding   { background: #ffedd5; color: #9a3412; }
+  .col-header.transit   { background: #dbeafe; color: #1e40af; }
+  .col-header.completed { background: #dcfce7; color: #166534; }
+  .col-count { background: rgba(255,255,255,.7); border-radius: 20px; padding: 0 6px; font-size: 10px; }
+  .col-cards { overflow-y: auto; flex: 1; display: flex; flex-direction: column; gap: 6px;
+               scrollbar-width: thin; scrollbar-color: #e2e8f0 transparent; padding-right: 2px; }
+
+  /* ── Order card ── */
+  .order-card { background: #fff; border-radius: 10px; border: 1px solid #e2e8f0; padding: 10px;
+                box-shadow: 0 1px 3px rgba(0,0,0,.04); flex-shrink: 0; }
+  .order-card-top { display: flex; justify-content: space-between; align-items: center; margin-bottom: 7px; }
+  .order-num { font-family: monospace; font-size: 10px; font-weight: 700; color: #64748b; }
+  .status-badge { font-size: 9px; font-weight: 700; padding: 2px 7px; border-radius: 20px; }
+  .badge-pending       { background: #fef9c3; color: #854d0e; }
+  .badge-searching     { background: #ffedd5; color: #9a3412; }
+  .badge-assigned      { background: #dbeafe; color: #1e40af; }
+  .badge-enroute       { background: #e0e7ff; color: #3730a3; }
+  .badge-arrived       { background: #ede9fe; color: #5b21b6; }
+  .badge-pickedup      { background: #f0fdf4; color: #166534; }
+  .badge-transit       { background: #dbeafe; color: #1d4ed8; }
+  .badge-delivered     { background: #dcfce7; color: #166534; }
+  .badge-cancelled     { background: #f1f5f9; color: #64748b; }
+  .route-mini { font-size: 11px; color: #475569; }
+  .route-mini-row { display: flex; align-items: center; gap: 5px; }
+  .mini-dot { width: 7px; height: 7px; border-radius: 50%; flex-shrink: 0; }
+  .route-mini-connector { width: 1px; height: 8px; background: #e2e8f0; margin: 1px 0 1px 3px; }
+  .order-footer { display: flex; justify-content: space-between; align-items: center; margin-top: 8px; }
+  .order-time { font-size: 10px; color: #94a3b8; }
+  .order-fare { font-size: 13px; font-weight: 700; color: #0f172a; }
+  .reassign-btn { font-size: 10px; font-weight: 700; color: #fff; background: #2563eb;
+                   border: none; border-radius: 6px; padding: 4px 8px; cursor: pointer;
+                   margin-top: 6px; width: 100%; }
+  .reassign-btn:hover { background: #1d4ed8; }
+
+  /* ── Modal ── */
+  .modal-backdrop { position: fixed; inset: 0; background: rgba(0,0,0,.45); z-index: 2000;
+                    display: none; place-items: center; }
+  .modal-backdrop.open { display: grid; }
+  .modal { background: #fff; border-radius: 20px; padding: 24px; width: 380px; max-width: 95vw;
+           box-shadow: 0 20px 60px rgba(0,0,0,.25); }
+  .modal-header { display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 16px; }
+  .modal-title { font-size: 17px; font-weight: 800; color: #0f172a; }
+  .modal-sub { font-size: 12px; color: #94a3b8; margin-top: 2px; }
+  .modal-close-btn { background: none; border: none; font-size: 22px; color: #94a3b8; cursor: pointer; line-height: 1; }
+  .warning-box { background: #fef2f2; border: 1px solid #fecaca; border-radius: 10px;
+                  padding: 10px 14px; margin-bottom: 14px; font-size: 12px; }
+  .warning-box strong { color: #dc2626; display: block; margin-bottom: 2px; }
+  .warning-box span { color: #ef4444; font-family: monospace; font-size: 11px; }
+  .form-label { font-size: 12px; font-weight: 600; color: #374151; margin-bottom: 6px; display: block; }
+  .form-input { width: 100%; border: 1.5px solid #e2e8f0; border-radius: 10px; padding: 10px 12px;
+                font-size: 13px; font-family: monospace; outline: none; }
+  .form-input:focus { border-color: #2563eb; box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
+  .modal-actions { display: flex; gap: 10px; margin-top: 16px; }
+  .btn-cancel { flex: 1; padding: 10px; border: 1.5px solid #e2e8f0; border-radius: 10px;
+                font-size: 13px; font-weight: 600; color: #64748b; background: #fff; cursor: pointer; }
+  .btn-confirm { flex: 2; padding: 10px; border: none; border-radius: 10px; background: #2563eb;
+                  font-size: 13px; font-weight: 700; color: #fff; cursor: pointer; }
+  .btn-confirm:hover { background: #1d4ed8; }
+  .toast { position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%);
+           background: #0f172a; color: #fff; padding: 10px 20px; border-radius: 10px;
+           font-size: 13px; font-weight: 600; z-index: 3000; opacity: 0; pointer-events: none;
+           transition: opacity .3s; box-shadow: 0 4px 20px rgba(0,0,0,.2); }
+  .toast.show { opacity: 1; }
+
+  /* ── Scrollbar ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: transparent; }
+  ::-webkit-scrollbar-thumb { background: #e2e8f0; border-radius: 2px; }
+
+  /* ── Leaflet marker override ── */
+  .driver-icon { width: 32px; height: 32px; display: grid; place-items: center;
+                 border-radius: 50%; border: 2.5px solid #fff; font-size: 16px;
+                 box-shadow: 0 2px 8px rgba(0,0,0,.25); transition: transform .3s ease; }
+  .driver-icon:hover { transform: scale(1.25); }
+</style>
+</head>
+<body>
+
+<!-- TOP BAR -->
+<div class="topbar">
+  <div class="topbar-logo">
+    <span>🚚</span> Dispatch Control
+  </div>
+  <div class="tab-row">
+    <button class="tab active">Live Fleet</button>
+    <button class="tab">Analytics</button>
+    <button class="tab">Settings</button>
+  </div>
+  <div class="topbar-badge">
+    <div class="pulse"></div>
+    <span id="onlineCount">8</span> drivers online
+  </div>
+  <div class="topbar-stats">
+    <div class="topbar-stat">
+      <div class="topbar-stat-val" id="statOrders">14</div>
+      <div class="topbar-stat-lbl">Active Orders</div>
+    </div>
+    <div class="topbar-stat">
+      <div class="topbar-stat-val">BHD 3.250</div>
+      <div class="topbar-stat-lbl">Avg Fare</div>
+    </div>
+    <div class="topbar-stat">
+      <div class="topbar-stat-val">98.2%</div>
+      <div class="topbar-stat-lbl">On-time</div>
+    </div>
+  </div>
+</div>
+
+<!-- MAIN -->
+<div class="main">
+
+  <!-- MAP PANEL -->
+  <div class="map-panel">
+    <div id="map"></div>
+    <div class="map-overlay">
+      <div class="pulse"></div>
+      Live · Manama, Bahrain · Pings every 3 s
+    </div>
+    <div class="map-legend">
+      <div class="legend-row"><div class="legend-dot" style="background:#22c55e"></div> Available</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#3b82f6"></div> On a Job</div>
+      <div class="legend-row"><div class="legend-dot" style="background:#f59e0b"></div> Arriving</div>
+    </div>
+  </div>
+
+  <!-- RIGHT PANEL -->
+  <div class="right-panel">
+
+    <!-- Driver info (shown on marker click) -->
+    <div class="driver-info" id="driverInfo">
+      <div class="driver-info-header">
+        <div>
+          <div class="driver-info-name" id="dInfoName">—</div>
+          <div class="driver-info-id" id="dInfoId">—</div>
+        </div>
+        <button class="driver-info-close" onclick="closeDriverInfo()">✕</button>
+      </div>
+      <div class="driver-meta">
+        <div class="driver-meta-item">
+          <div class="driver-meta-val" id="dInfoStatus">—</div>
+          <div class="driver-meta-lbl">Status</div>
+        </div>
+        <div class="driver-meta-item">
+          <div class="driver-meta-val" id="dInfoSpeed">—</div>
+          <div class="driver-meta-lbl">Speed</div>
+        </div>
+        <div class="driver-meta-item">
+          <div class="driver-meta-val" id="dInfoRating">—</div>
+          <div class="driver-meta-lbl">Rating</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Kanban -->
+    <div class="kanban">
+      <div class="kanban-title">Order Queue</div>
+      <div class="kanban-cols">
+        <div class="kanban-col">
+          <div class="col-header pending">Pending <span class="col-count" id="cnt-pending">0</span></div>
+          <div class="col-cards" id="col-pending"></div>
+        </div>
+        <div class="kanban-col">
+          <div class="col-header finding">Finding Driver <span class="col-count" id="cnt-finding">0</span></div>
+          <div class="col-cards" id="col-finding"></div>
+        </div>
+        <div class="kanban-col">
+          <div class="col-header transit">In Transit <span class="col-count" id="cnt-transit">0</span></div>
+          <div class="col-cards" id="col-transit"></div>
+        </div>
+        <div class="kanban-col">
+          <div class="col-header completed">Completed <span class="col-count" id="cnt-completed">0</span></div>
+          <div class="col-cards" id="col-completed"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- REASSIGN MODAL -->
+<div class="modal-backdrop" id="modalBackdrop" onclick="closeModal(event)">
+  <div class="modal" onclick="event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <div class="modal-title">Force Reassign Driver</div>
+        <div class="modal-sub" id="modalOrderNum">—</div>
+      </div>
+      <button class="modal-close-btn" onclick="closeModal()">✕</button>
+    </div>
+    <div class="warning-box">
+      <strong>Current driver will be removed</strong>
+      <span id="modalCurrentDriver">—</span>
+    </div>
+    <label class="form-label">New Driver ID</label>
+    <input class="form-input" id="newDriverInput" placeholder="Enter driver UUID…" />
+    <div class="modal-actions">
+      <button class="btn-cancel" onclick="closeModal()">Cancel</button>
+      <button class="btn-confirm" onclick="confirmReassign()">Confirm Reassign</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div class="toast" id="toast"></div>
+
+<script>
+// ── Map setup ─────────────────────────────────────────────────────────────────
+const map = L.map('map', { zoomControl: false }).setView([26.215, 50.586], 13);
+L.control.zoom({ position: 'topright' }).addTo(map);
+L.tileLayer('https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png', {
+  attribution: '© OpenStreetMap © CARTO',
+  maxZoom: 19
+}).addTo(map);
+
+// ── Mock data ─────────────────────────────────────────────────────────────────
+const DRIVER_NAMES = ['Ahmed Al-Sayed','Khalid Hassan','Mohammed Nasser','Sara Al-Rashid',
+                      'Yusuf Ibrahim','Fatima Al-Ali','Tariq Mansour','Layla Al-Khalifa'];
+const VEHICLE_TYPES = ['Motorcycle','Car','Van','Car','Motorcycle','Car','Pickup','Car'];
+const RATINGS = [4.9,4.7,4.8,5.0,4.6,4.9,4.8,4.7];
+
+const MANAMA = { lat: 26.215, lng: 50.586 };
+function randNear(center, spread) {
+  return {
+    lat: center.lat + (Math.random() - .5) * spread,
+    lng: center.lng + (Math.random() - .5) * spread
+  };
+}
+
+// GCC-area points for varied start positions
+const STARTS = [
+  {lat:26.215,lng:50.586},{lat:26.225,lng:50.573},{lat:26.200,lng:50.601},
+  {lat:26.232,lng:50.596},{lat:26.207,lng:50.567},{lat:26.240,lng:50.580},
+  {lat:26.195,lng:50.588},{lat:26.218,lng:50.610}
+];
+
+const STATUS_COLOR = { AVAILABLE:'#22c55e', ON_JOB:'#3b82f6', ARRIVING:'#f59e0b' };
+const STATUS_EMOJI = { AVAILABLE:'🟢', ON_JOB:'🔵', ARRIVING:'🟡' };
+
+// Build drivers
+const drivers = DRIVER_NAMES.map((name, i) => ({
+  id: 'DRV-' + Math.random().toString(36).slice(2,8).toUpperCase(),
+  name,
+  vehicle: VEHICLE_TYPES[i],
+  rating: RATINGS[i],
+  status: i < 3 ? 'AVAILABLE' : i < 6 ? 'ON_JOB' : 'ARRIVING',
+  pos: { ...STARTS[i] },
+  vel: { dlat: (Math.random()-.5)*.0004, dlng: (Math.random()-.5)*.0005 },
+  speed: (15 + Math.random()*25).toFixed(1),
+  marker: null
+}));
+
+function makeIcon(status) {
+  const color = STATUS_COLOR[status];
+  return L.divIcon({
+    html: `<div class="driver-icon" style="background:${color}">🚗</div>`,
+    iconSize: [32,32], iconAnchor: [16,16], className: ''
+  });
+}
+
+drivers.forEach(d => {
+  d.marker = L.marker([d.pos.lat, d.pos.lng], { icon: makeIcon(d.status) })
+    .addTo(map)
+    .bindTooltip(`<b>${d.name}</b><br>${d.vehicle} · ⭐ ${d.rating}`, { direction:'top', offset:[0,-14] })
+    .on('click', () => showDriverInfo(d));
+});
+
+// ── Animate drivers ───────────────────────────────────────────────────────────
+function movDrivers() {
+  drivers.forEach(d => {
+    d.pos.lat += d.vel.dlat;
+    d.pos.lng += d.vel.dlng;
+    // Bounce within Manama area
+    if (Math.abs(d.pos.lat - 26.215) > .05) d.vel.dlat *= -1;
+    if (Math.abs(d.pos.lng - 50.586) > .07) d.vel.dlng *= -1;
+    d.speed = (15 + Math.random()*25).toFixed(1);
+    d.marker.setLatLng([d.pos.lat, d.pos.lng]);
+  });
+  document.getElementById('onlineCount').textContent = drivers.length;
+}
+setInterval(movDrivers, 1500); // smooth visual movement
+
+// ── Driver info panel ─────────────────────────────────────────────────────────
+function showDriverInfo(d) {
+  document.getElementById('dInfoName').textContent = d.name;
+  document.getElementById('dInfoId').textContent = d.id;
+  document.getElementById('dInfoStatus').textContent = d.status.replace('_',' ');
+  document.getElementById('dInfoStatus').style.color = STATUS_COLOR[d.status];
+  document.getElementById('dInfoSpeed').textContent = d.speed + ' km/h';
+  document.getElementById('dInfoRating').textContent = '⭐ ' + d.rating;
+  document.getElementById('driverInfo').classList.add('visible');
+  map.flyTo([d.pos.lat, d.pos.lng], 15, { duration: 0.8 });
+}
+function closeDriverInfo() {
+  document.getElementById('driverInfo').classList.remove('visible');
+}
+
+// ── Mock orders ───────────────────────────────────────────────────────────────
+const STREETS = ['Building 12, Al Fateh Hwy','Flat 4, Seef Mall Rd','Villa 7, Adliya','Warehouse C, Sitra',
+                 'Office 3, Diplomatic Area','Shop 9, Manama Souq','Block 5, Isa Town','Tower B, Bahrain Bay'];
+const CURRENCIES = ['BHD','SAR','AED'];
+const STATUSES = ['PENDING','SEARCHING_DRIVER','DRIVER_ASSIGNED','DRIVER_EN_ROUTE',
+                  'DRIVER_ARRIVED','PICKED_UP','IN_TRANSIT','DELIVERED','CANCELLED'];
+
+function randEl(arr) { return arr[Math.floor(Math.random()*arr.length)]; }
+function randFare(cur) {
+  const base = cur==='BHD'?1.2:cur==='SAR'?6:4;
+  const f = base + Math.random()*3;
+  return cur==='BHD' ? f.toFixed(3) : f.toFixed(2);
+}
+function timeAgo(ms) {
+  const s = Math.floor((Date.now()-ms)/1000);
+  if(s<60) return s+'s ago';
+  return Math.floor(s/60)+'m ago';
+}
+function orderNum() {
+  const d = new Date(); const ymd = d.getFullYear().toString()+
+    String(d.getMonth()+1).padStart(2,'0')+String(d.getDate()).padStart(2,'0');
+  return 'ORD-'+ymd+'-'+Math.random().toString(36).slice(2,8).toUpperCase();
+}
+
+let orders = [];
+let reassignTarget = null;
+
+function makeOrder() {
+  const cur = randEl(CURRENCIES);
+  const status = randEl(STATUSES);
+  const driverId = status==='PENDING'||status==='SEARCHING_DRIVER' ? null :
+    drivers[Math.floor(Math.random()*drivers.length)].id;
+  return {
+    id: 'ord-'+Math.random().toString(36).slice(2,10),
+    orderNumber: orderNum(),
+    status,
+    pickup: randEl(STREETS),
+    dropoff: randEl(STREETS.filter(s=>true)),
+    currency: cur,
+    fare: randFare(cur),
+    driverId,
+    createdAt: Date.now() - Math.floor(Math.random()*45*60*1000)
+  };
+}
+
+for(let i=0;i<14;i++) orders.push(makeOrder());
+
+// ── Status → column ───────────────────────────────────────────────────────────
+const COL_MAP = {
+  PENDING:'pending', SEARCHING_DRIVER:'finding',
+  DRIVER_ASSIGNED:'transit', DRIVER_EN_ROUTE:'transit',
+  DRIVER_ARRIVED:'transit', PICKED_UP:'transit', IN_TRANSIT:'transit',
+  DELIVERED:'completed', CANCELLED:'completed', FAILED:'completed'
+};
+const BADGE_MAP = {
+  PENDING:'badge-pending', SEARCHING_DRIVER:'badge-searching',
+  DRIVER_ASSIGNED:'badge-assigned', DRIVER_EN_ROUTE:'badge-enroute',
+  DRIVER_ARRIVED:'badge-arrived', PICKED_UP:'badge-pickedup',
+  IN_TRANSIT:'badge-transit', DELIVERED:'badge-delivered', CANCELLED:'badge-cancelled'
+};
+const STATUS_LABEL = {
+  PENDING:'Pending', SEARCHING_DRIVER:'Searching…', DRIVER_ASSIGNED:'Assigned',
+  DRIVER_EN_ROUTE:'En Route', DRIVER_ARRIVED:'Arrived', PICKED_UP:'Picked Up',
+  IN_TRANSIT:'In Transit', DELIVERED:'Delivered', CANCELLED:'Cancelled'
+};
+
+function renderKanban() {
+  const cols = { pending:[], finding:[], transit:[], completed:[] };
+  orders.forEach(o => { const c = COL_MAP[o.status]; if(c) cols[c].push(o); });
+
+  ['pending','finding','transit','completed'].forEach(col => {
+    const el = document.getElementById('col-'+col);
+    const cnt = document.getElementById('cnt-'+col);
+    const arr = cols[col].sort((a,b)=>b.createdAt-a.createdAt);
+    cnt.textContent = arr.length;
+
+    el.innerHTML = arr.map(o => {
+      const isTransit = col === 'transit';
+      return `<div class="order-card">
+        <div class="order-card-top">
+          <span class="order-num">${o.orderNumber.slice(-10)}</span>
+          <span class="status-badge ${BADGE_MAP[o.status]}">${STATUS_LABEL[o.status]}</span>
+        </div>
+        <div class="route-mini">
+          <div class="route-mini-row"><div class="mini-dot" style="background:#22c55e"></div>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${o.pickup}</span></div>
+          <div class="route-mini-connector"></div>
+          <div class="route-mini-row"><div class="mini-dot" style="background:#ef4444"></div>
+            <span style="overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:140px">${o.dropoff}</span></div>
+        </div>
+        <div class="order-footer">
+          <span class="order-time">${timeAgo(o.createdAt)}</span>
+          <span class="order-fare">${o.currency} ${o.fare}</span>
+        </div>
+        ${isTransit ? `<button class="reassign-btn" onclick="openReassign('${o.id}')">🔄 Force Reassign</button>` : ''}
+      </div>`;
+    }).join('');
+  });
+
+  document.getElementById('statOrders').textContent =
+    (cols.pending.length + cols.finding.length + cols.transit.length);
+}
+
+renderKanban();
+
+// Live order simulation: randomly update statuses
+const NEXT_STATUS = {
+  PENDING: 'SEARCHING_DRIVER', SEARCHING_DRIVER: 'DRIVER_ASSIGNED',
+  DRIVER_ASSIGNED: 'DRIVER_EN_ROUTE', DRIVER_EN_ROUTE: 'DRIVER_ARRIVED',
+  DRIVER_ARRIVED: 'PICKED_UP', PICKED_UP: 'IN_TRANSIT', IN_TRANSIT: 'DELIVERED'
+};
+function tickOrders() {
+  if(Math.random() < 0.35) {
+    const active = orders.filter(o => o.status !== 'DELIVERED' && o.status !== 'CANCELLED');
+    if(active.length > 0) {
+      const o = active[Math.floor(Math.random()*active.length)];
+      const next = NEXT_STATUS[o.status];
+      if(next) {
+        o.status = next;
+        if(!o.driverId && next !== 'PENDING' && next !== 'SEARCHING_DRIVER') {
+          o.driverId = drivers[Math.floor(Math.random()*drivers.length)].id;
+        }
+      }
+    }
+  }
+  // Occasionally add a new order
+  if(Math.random() < 0.15 && orders.length < 20) {
+    orders.push(makeOrder());
+    showToast('New order received!');
+  }
+  renderKanban();
+}
+setInterval(tickOrders, 3000);
+
+// ── Reassign modal ────────────────────────────────────────────────────────────
+function openReassign(orderId) {
+  const o = orders.find(x => x.id === orderId);
+  if(!o) return;
+  reassignTarget = o;
+  document.getElementById('modalOrderNum').textContent = o.orderNumber;
+  document.getElementById('modalCurrentDriver').textContent = o.driverId || 'None assigned';
+  document.getElementById('newDriverInput').value = '';
+  document.getElementById('modalBackdrop').classList.add('open');
+  setTimeout(() => document.getElementById('newDriverInput').focus(), 100);
+}
+function closeModal(e) {
+  if(e && e.target !== document.getElementById('modalBackdrop')) return;
+  document.getElementById('modalBackdrop').classList.remove('open');
+  reassignTarget = null;
+}
+function confirmReassign() {
+  const val = document.getElementById('newDriverInput').value.trim();
+  if(!val) { document.getElementById('newDriverInput').focus(); return; }
+  if(reassignTarget) {
+    reassignTarget.driverId = val;
+    reassignTarget.status = 'DRIVER_ASSIGNED';
+  }
+  document.getElementById('modalBackdrop').classList.remove('open');
+  reassignTarget = null;
+  renderKanban();
+  showToast('Driver reassigned successfully ✓');
+}
+
+// Allow Enter key in the modal input
+document.getElementById('newDriverInput').addEventListener('keydown', e => {
+  if(e.key === 'Enter') confirmReassign();
+});
+
+// ── Toast ─────────────────────────────────────────────────────────────────────
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+// ── Tab switching (cosmetic) ──────────────────────────────────────────────────
+document.querySelectorAll('.tab').forEach(tab => {
+  tab.addEventListener('click', () => {
+    document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+    tab.classList.add('active');
+  });
+});
+
+// ── Time-ago refresh ──────────────────────────────────────────────────────────
+setInterval(renderKanban, 15000);
+</script>
+</body>
+</html>
