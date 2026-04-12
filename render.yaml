@@ -1,0 +1,79 @@
+services:
+  # ── API (Node.js + Socket.io) ─────────────────────────────────────────────
+  - type: web
+    name: pickup-dropoff-api
+    runtime: docker
+    dockerfilePath: ./api/Dockerfile
+    dockerContext: ./api
+    plan: free
+    healthCheckPath: /api/v1/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: DB_HOST
+        fromDatabase:
+          name: pickup-dropoff-db
+          property: host
+      - key: DB_PORT
+        fromDatabase:
+          name: pickup-dropoff-db
+          property: port
+      - key: DB_NAME
+        fromDatabase:
+          name: pickup-dropoff-db
+          property: database
+      - key: DB_USER
+        fromDatabase:
+          name: pickup-dropoff-db
+          property: user
+      - key: DB_PASSWORD
+        fromDatabase:
+          name: pickup-dropoff-db
+          property: password
+      - key: DB_SSL
+        value: "true"
+      - key: REDIS_URL
+        fromService:
+          name: pickup-dropoff-redis
+          type: redis
+          property: connectionString
+      - key: JWT_ACCESS_SECRET
+        generateValue: true
+      - key: JWT_REFRESH_SECRET
+        generateValue: true
+      - key: ENCRYPTION_KEY
+        generateValue: true
+      - key: DEFAULT_CURRENCY
+        value: BHD
+      - key: DISPATCH_RADIUS_KM
+        value: "5"
+      - key: LOG_LEVEL
+        value: info
+
+  # ── Admin Dashboard (Vite React) ──────────────────────────────────────────
+  - type: web
+    name: pickup-dropoff-admin
+    runtime: static
+    buildCommand: cd admin && npm ci && npm run build
+    staticPublishPath: ./admin/dist
+    envVars:
+      - key: VITE_API_URL
+        fromService:
+          name: pickup-dropoff-api
+          type: web
+          property: url
+      - key: VITE_WS_URL
+        fromService:
+          name: pickup-dropoff-api
+          type: web
+          property: url
+
+databases:
+  - name: pickup-dropoff-db
+    plan: free
+    postgresMajorVersion: 15
+
+  - name: pickup-dropoff-redis
+    plan: free
