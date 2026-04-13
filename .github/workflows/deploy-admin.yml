@@ -1,0 +1,43 @@
+name: Deploy Admin Dashboard → GitHub Pages
+
+on:
+  push:
+    branches: [main, claude/pickup-dropoff-api-T5bA8]
+    paths:
+      - 'admin/**'
+      - '.github/workflows/deploy-admin.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+          cache-dependency-path: admin/package-lock.json
+
+      - name: Install dependencies
+        working-directory: admin
+        run: npm ci
+
+      - name: Build
+        working-directory: admin
+        env:
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pickup-dropoff-api.railway.app' }}
+          VITE_WS_URL: ${{ secrets.VITE_WS_URL || 'https://pickup-dropoff-api.railway.app' }}
+          VITE_MAPBOX_TOKEN: ${{ secrets.VITE_MAPBOX_TOKEN }}
+        run: npx vite build
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: admin/dist
+          force_orphan: true

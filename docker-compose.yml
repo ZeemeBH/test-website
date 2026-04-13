@@ -1,0 +1,107 @@
+version: '3.9'
+
+# ── Full stack: PostgreSQL + PostGIS, Redis, API, Admin Dashboard ─────────────
+#
+# Quick start:
+#   docker compose up --build
+#
+# Access:
+#   API:     http://localhost:3000/api/v1/health
+#   Admin:   http://localhost:5173
+#   DB:      localhost:5432   (user: postgres, pass: postgres, db: pickup_dropoff)
+#   Redis:   localhost:6379
+
+services:
+
+  # ── PostgreSQL + PostGIS ────────────────────────────────────────────────────
+  db:
+    image: postgis/postgis:15-3.4-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: pickup_dropoff
+    ports:
+      - "5432:5432"
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./api/scripts/init-postgis.sql:/docker-entrypoint-initdb.d/init-postgis.sql
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # ── Redis ───────────────────────────────────────────────────────────────────
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+
+  # ── API ─────────────────────────────────────────────────────────────────────
+  api:
+    build:
+      context: ./api
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    ports:
+      - "3000:3000"
+    environment:
+      NODE_ENV: development
+      PORT: 3000
+      API_VERSION: v1
+
+      DB_HOST: db
+      DB_PORT: 5432
+      DB_NAME: pickup_dropoff
+      DB_USER: postgres
+      DB_PASSWORD: postgres
+      DB_SSL: "false"
+
+      REDIS_HOST: redis
+      REDIS_PORT: 6379
+
+      JWT_ACCESS_SECRET: dev_access_secret_replace_in_production_64chars!!
+      JWT_REFRESH_SECRET: dev_refresh_secret_replace_in_production_64chars!!
+      ENCRYPTION_KEY: dev_encryption_key_32chars!!!!!!
+
+      DEFAULT_CURRENCY: BHD
+      DISPATCH_RADIUS_KM: "5"
+      LOG_LEVEL: info
+      LOG_PRETTY: "true"
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD-SHELL", "wget -qO- http://localhost:3000/api/v1/health || exit 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ── Admin Dashboard ─────────────────────────────────────────────────────────
+  admin:
+    image: node:20-alpine
+    working_dir: /app
+    command: sh -c "npm ci && npm run dev -- --host"
+    ports:
+      - "5173:5173"
+    volumes:
+      - ./admin:/app
+      - /app/node_modules
+    environment:
+      VITE_API_URL: http://localhost:3000
+      VITE_WS_URL: http://localhost:3000
+    depends_on:
+      api:
+        condition: service_healthy
+
+volumes:
+  pgdata:
