@@ -1,6 +1,6 @@
 import { Hono } from 'hono';
 import type { Env, UserRow } from '../types';
-import { signJwt, hashPassword, verifyPassword, authenticate } from '../middleware/auth';
+import { signJwt, verifyJwt, hashPassword, verifyPassword, authenticate } from '../middleware/auth';
 
 type AuthEnv = { Bindings: Env; Variables: { userId: string; userRole: string } };
 
@@ -105,8 +105,7 @@ auth.post('/refresh', async (c) => {
   if (!refreshToken) return c.json({ success: false, message: 'Refresh token required' }, 400);
 
   try {
-    const { verifyJwt: vJwt } = await import('../middleware/auth');
-    const payload = await vJwt(refreshToken, c.env.JWT_REFRESH_SECRET);
+    const payload = await verifyJwt(refreshToken, c.env.JWT_REFRESH_SECRET);
 
     const user = await c.env.DB.prepare('SELECT id, role, is_active FROM users WHERE id = ?').bind(payload.sub).first<UserRow>();
     if (!user || !user.is_active) return c.json({ success: false, message: 'User not found' }, 401);

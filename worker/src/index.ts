@@ -27,6 +27,12 @@ app.use('*', cors({
   maxAge: 86400,
 }));
 
+// ── Global error handler (must be before routes) ────────────────────────────
+app.onError((err, c) => {
+  console.error('[Worker Error]', err.message, err.stack);
+  return c.json({ success: false, message: err.message ?? 'Internal server error' }, 500);
+});
+
 // ── Health check ────────────────────────────────────────────────────────────
 app.get('/api/v1/health', (c) => {
   return c.json({
@@ -134,6 +140,17 @@ app.get('/api/v1/stats', async (c) => {
   ]);
 
   return c.json({ success: true, data: { orders: orderStats, drivers: driverStats, revenue: revenueStats } });
+});
+
+// ── Debug endpoint (shows binding status) ───────────────────────────────────
+app.get('/api/v1/debug', (c) => {
+  return c.json({
+    hasDB: !!c.env.DB,
+    hasSessions: !!c.env.SESSIONS,
+    hasJwtAccessSecret: !!c.env.JWT_ACCESS_SECRET,
+    hasJwtRefreshSecret: !!c.env.JWT_REFRESH_SECRET,
+    timestamp: new Date().toISOString(),
+  });
 });
 
 // ── Mount route modules ─────────────────────────────────────────────────────
