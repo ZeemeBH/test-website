@@ -57,10 +57,15 @@ jobs:
 
       - name: Build
         env:
-          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pickup-dropoff-api.zeemebh.workers.dev' }}
-          VITE_WS_URL: ${{ secrets.VITE_WS_URL || 'https://pickup-dropoff-api.zeemebh.workers.dev' }}
+          VITE_API_URL: ${{ secrets.VITE_API_URL || 'https://pickup-dropoff-api.late-unit-ca39.workers.dev' }}
+          VITE_WS_URL: ${{ secrets.VITE_WS_URL || 'https://pickup-dropoff-api.late-unit-ca39.workers.dev' }}
           VITE_BASE_PATH: '/test-website/'
         run: npm run build
+
+      - name: Inject runtime ENV into index.html
+        run: |
+          API_URL="${{ secrets.VITE_API_URL || 'https://pickup-dropoff-api.late-unit-ca39.workers.dev' }}"
+          sed -i "s|</head>|<script>window.__ENV__={API_URL:\"${API_URL}\",WS_URL:\"${API_URL}\",MB_TOKEN:\"\"};</script></head>|" dist/index.html
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
