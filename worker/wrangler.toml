@@ -1,0 +1,19 @@
+name = "pickup-dropoff-api"
+main = "src/index.ts"
+compatibility_date = "2024-12-01"
+compatibility_flags = ["nodejs_compat"]
+
+[vars]
+DEFAULT_CURRENCY = "BHD"
+CORS_ORIGIN = "https://zeemebh.github.io"
+
+# D1 Database
+[[d1_databases]]
+binding = "DB"
+database_name = "pickup-dropoff-db"
+database_id = "9fdd2128-ded8-43cb-b4db-64bd62c7c9c5"
+
+# KV Namespace (sessions / cache)
+[[kv_namespaces]]
+binding = "SESSIONS"
+id = "1e7e9b4e75d64f92a4bbb2fa01d14443"

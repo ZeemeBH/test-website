@@ -6,22 +6,38 @@ On-demand logistics platform: real-time driver tracking, order dispatch, and fle
 
 **Admin Dashboard:** https://zeemebh.github.io/test-website/
 
-## One-Click Deploy
+**API Health:** `https://pickup-dropoff-api.<your-subdomain>.workers.dev/api/v1/health`
 
-### Backend API (Railway)
+## Cloud Deployment (Cloudflare)
 
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template?template=https://github.com/ZeemeBH/test-website&envs=JWT_ACCESS_SECRET,JWT_REFRESH_SECRET,ENCRYPTION_KEY,DEFAULT_CURRENCY&JWT_ACCESS_SECRETDesc=64+random+chars&JWT_REFRESH_SECRETDesc=64+random+chars+different&ENCRYPTION_KEYDesc=Exactly+32+chars&DEFAULT_CURRENCYDefault=BHD)
+The platform runs on Cloudflare's edge network — zero cold starts, global distribution.
 
-After deploying, copy your Railway URL and add these GitHub Secrets so the admin auto-connects:
+### Required GitHub Secrets
 
 | Secret | Value |
 |--------|-------|
-| `VITE_API_URL` | Your Railway URL (e.g. `https://xxx.up.railway.app`) |
-| `VITE_WS_URL` | Same Railway URL |
+| `CLOUDFLARE_API_TOKEN` | Cloudflare API token with Workers/D1/KV permissions |
+| `CLOUDFLARE_ACCOUNT_ID` | Your Cloudflare account ID |
+| `VITE_API_URL` | Worker URL (e.g. `https://pickup-dropoff-api.zeemebh.workers.dev`) |
 
-Then run: **Actions → Deploy Admin Dashboard → Run workflow**
+### First-Time Setup
 
-## Local Development (Docker)
+After adding secrets and the workflow runs:
+
+```bash
+# 1. Initialize database tables (one-time)
+curl -X POST https://pickup-dropoff-api.<sub>.workers.dev/api/v1/admin/init-db \
+  -H "Authorization: Bearer <JWT_ACCESS_SECRET value>"
+
+# 2. Create admin account
+curl -X POST https://pickup-dropoff-api.<sub>.workers.dev/api/v1/auth/setup \
+  -H "Content-Type: application/json" \
+  -d '{"email":"admin@company.com","password":"YourSecurePass","firstName":"Admin","lastName":"User"}'
+```
+
+Then sign in at the dashboard with those credentials.
+
+## Alternative: Local Development (Docker)
 
 ```bash
 docker compose up --build
@@ -32,19 +48,20 @@ docker compose up --build
 ## Architecture
 
 ```
-Driver App (RN)  ──WebSocket──►┐
-Customer App (RN)──REST API───►│  Node.js API (Express + Socket.io)
-Admin Dashboard ──WebSocket──►│  PostgreSQL + PostGIS + Redis
+Driver App (RN)  ──REST/WS──►┐
+Customer App (RN)──REST API──►│  Cloudflare Worker (Hono)
+Admin Dashboard ──REST API──►│  D1 (SQLite) + KV Sessions
 ```
 
 ## Stack
 
 | Layer | Tech |
 |-------|------|
-| API | Node.js, TypeScript, Express |
-| Real-time | Socket.io, Redis pub/sub |
-| Database | PostgreSQL 15 + PostGIS |
-| Auth | JWT access + refresh tokens, RBAC |
+| API (Cloud) | Cloudflare Workers, Hono, TypeScript |
+| API (Self-hosted) | Node.js, Express, TypeORM |
+| Database | Cloudflare D1 (cloud) / PostgreSQL + PostGIS (self-hosted) |
+| Cache/Sessions | Cloudflare KV (cloud) / Redis (self-hosted) |
+| Auth | JWT access + refresh tokens, PBKDF2, RBAC |
 | Admin UI | React 18, Vite, Tailwind, Mapbox GL |
 | Mobile | React Native (Customer + Driver) |
-| Hosting | Railway (API) + GitHub Pages (Admin) |
+| Hosting | Cloudflare Workers + GitHub Pages |

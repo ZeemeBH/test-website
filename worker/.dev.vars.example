@@ -1,0 +1,4 @@
+# Copy this file to .dev.vars for local Wrangler dev
+# .dev.vars is gitignored — never commit real secrets
+JWT_ACCESS_SECRET=replace-with-64-random-chars-minimum
+JWT_REFRESH_SECRET=replace-with-64-different-random-chars
