@@ -62,10 +62,6 @@ jobs:
           VITE_BASE_PATH: '/test-website/'
         run: npm run build
 
-      - name: Inject runtime ENV into index.html
-        run: |
-          sed -i "s|</head>|<script>window.__ENV__={API_URL:\"https://pickup-dropoff-api.late-unit-ca39.workers.dev\",WS_URL:\"https://pickup-dropoff-api.late-unit-ca39.workers.dev\",MB_TOKEN:\"\"};</script></head>|" dist/index.html
-
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
